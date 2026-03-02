@@ -1,98 +1,130 @@
-<!DOCTYPE html>
+<!<!DOCTYPE html>
 <html>
 <head>
-    <title>XOX Game</title>
+    <title>Advanced XOX Game</title>
     <style>
         body {
-            font-family: Arial;
+            font-family: Arial, sans-serif;
             text-align: center;
-            background-color: #f4f4f4;
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            color: white;
         }
 
         h1 {
             margin-top: 20px;
         }
 
+        .scoreboard {
+            margin: 15px;
+            font-size: 18px;
+        }
+
         .board {
             display: grid;
-            grid-template-columns: repeat(3, 100px);
-            grid-gap: 5px;
+            grid-template-columns: repeat(3, 110px);
+            gap: 8px;
             justify-content: center;
             margin-top: 20px;
         }
 
         .cell {
-            width: 100px;
-            height: 100px;
-            font-size: 40px;
-            background: white;
-            border: 2px solid black;
+            width: 110px;
+            height: 110px;
+            font-size: 45px;
+            font-weight: bold;
+            background: green;
+            color: purple;
+            border-radius: 10px;
+            border: none;
             cursor: pointer;
+            transition: 0.3s;
         }
 
         .cell:hover {
-            background-color: #e0e0e0;
+            background: #dfe6e9;
+            transform: scale(1.05);
+        }
+
+        .winner {
+            background-color: #2ecc71 !important;
+            color: white;
         }
 
         #status {
             margin-top: 20px;
-            font-size: 20px;
+            font-size: 22px;
         }
 
         button {
-            margin-top: 15px;
+            margin: 10px;
             padding: 10px 20px;
-            font-size: 16px;
+            font-size: 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
         }
+
+        .restart {
+            background: #ff7675;
+            color: white;
+        }
+
+        .resetScore {
+            background: #fdcb6e;
+        }
+
     </style>
 </head>
 <body>
 
-    <h1>XOX Game</h1>
+<h1>Modified XOX Game</h1>
 
-    <div class="board" id="board"></div>
+<div class="scoreboard">
+    Player X: <span id="scoreX">0</span> |
+    Player O: <span id="scoreO">0</span>
+</div>
 
-    <div id="status">Player X's Turn</div>
-    <button onclick="resetGame()">Restart Game</button>
+<div class="board" id="board"></div>
+
+<div id="status">Player X's Turn</div>
+
+<button class="restart" onclick="resetGame()">Restart Round</button>
+<button class="resetScore" onclick="resetScore()">Reset Scores</button>
 
 <script>
     // JSON Game State
     let gameState = {
         board: ["", "", "", "", "", "", "", "", ""],
         currentPlayer: "X",
-        gameActive: true
+        gameActive: true,
+        score: {
+            X: 0,
+            O: 0
+        }
     };
 
     const winningConditions = [
-        [0,1,2],
-        [3,4,5],
-        [6,7,8],
-        [0,3,6],
-        [1,4,7],
-        [2,5,8],
-        [0,4,8],
-        [2,4,6]
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
     ];
 
     const board = document.getElementById("board");
     const statusText = document.getElementById("status");
 
-    // Create Board
     function createBoard() {
         board.innerHTML = "";
         gameState.board.forEach((cell, index) => {
-            const cellDiv = document.createElement("div");
+            const cellDiv = document.createElement("button");
             cellDiv.classList.add("cell");
             cellDiv.innerText = cell;
-            cellDiv.addEventListener("click", () => handleCellClick(index));
+            cellDiv.addEventListener("click", () => handleClick(index));
             board.appendChild(cellDiv);
         });
     }
 
-    function handleCellClick(index) {
-        if (gameState.board[index] !== "" || !gameState.gameActive) {
-            return;
-        }
+    function handleClick(index) {
+        if (gameState.board[index] !== "" || !gameState.gameActive) return;
 
         gameState.board[index] = gameState.currentPlayer;
         createBoard();
@@ -100,45 +132,62 @@
     }
 
     function checkWinner() {
-        let roundWon = false;
+        let won = false;
 
-        for (let i = 0; i < winningConditions.length; i++) {
-            const [a, b, c] = winningConditions[i];
-
+        for (let condition of winningConditions) {
+            const [a, b, c] = condition;
             if (
                 gameState.board[a] &&
                 gameState.board[a] === gameState.board[b] &&
                 gameState.board[a] === gameState.board[c]
             ) {
-                roundWon = true;
+                highlightWinner(a, b, c);
+                gameState.score[gameState.currentPlayer]++;
+                updateScore();
+                statusText.innerText = "Player " + gameState.currentPlayer + " Wins!";
+                gameState.gameActive = false;
+                won = true;
                 break;
             }
         }
 
-        if (roundWon) {
-            statusText.innerText = "Player " + gameState.currentPlayer + " Wins!";
-            gameState.gameActive = false;
-            return;
-        }
-
-        if (!gameState.board.includes("")) {
+        if (!won && !gameState.board.includes("")) {
             statusText.innerText = "It's a Draw!";
             gameState.gameActive = false;
             return;
         }
 
-        gameState.currentPlayer = gameState.currentPlayer === "X" ? "O" : "X";
-        statusText.innerText = "Player " + gameState.currentPlayer + "'s Turn";
+        if (!won) {
+            gameState.currentPlayer = gameState.currentPlayer === "X" ? "O" : "X";
+            statusText.innerText = "Player " + gameState.currentPlayer + "'s Turn";
+        }
+    }
+
+    function highlightWinner(a, b, c) {
+        const cells = document.querySelectorAll(".cell");
+        cells[a].classList.add("winner");
+        cells[b].classList.add("winner");
+        cells[c].classList.add("winner");
+    }
+
+    function updateScore() {
+        document.getElementById("scoreX").innerText = gameState.score.X;
+        document.getElementById("scoreO").innerText = gameState.score.O;
     }
 
     function resetGame() {
-        gameState = {
-            board: ["", "", "", "", "", "", "", "", ""],
-            currentPlayer: "X",
-            gameActive: true
-        };
+        gameState.board = ["", "", "", "", "", "", "", "", ""];
+        gameState.currentPlayer = "X";
+        gameState.gameActive = true;
         statusText.innerText = "Player X's Turn";
         createBoard();
+    }
+
+    function resetScore() {
+        gameState.score.X = 0;
+        gameState.score.O = 0;
+        updateScore();
+        resetGame();
     }
 
     createBoard();
