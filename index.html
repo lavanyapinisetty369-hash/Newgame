@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>XOX Game</title>
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            margin-top: 20px;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-gap: 5px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .cell {
+            width: 100px;
+            height: 100px;
+            font-size: 40px;
+            background: white;
+            border: 2px solid black;
+            cursor: pointer;
+        }
+
+        .cell:hover {
+            background-color: #e0e0e0;
+        }
+
+        #status {
+            margin-top: 20px;
+            font-size: 20px;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>XOX Game</h1>
+
+    <div class="board" id="board"></div>
+
+    <div id="status">Player X's Turn</div>
+    <button onclick="resetGame()">Restart Game</button>
+
+<script>
+    // JSON Game State
+    let gameState = {
+        board: ["", "", "", "", "", "", "", "", ""],
+        currentPlayer: "X",
+        gameActive: true
+    };
+
+    const winningConditions = [
+        [0,1,2],
+        [3,4,5],
+        [6,7,8],
+        [0,3,6],
+        [1,4,7],
+        [2,5,8],
+        [0,4,8],
+        [2,4,6]
+    ];
+
+    const board = document.getElementById("board");
+    const statusText = document.getElementById("status");
+
+    // Create Board
+    function createBoard() {
+        board.innerHTML = "";
+        gameState.board.forEach((cell, index) => {
+            const cellDiv = document.createElement("div");
+            cellDiv.classList.add("cell");
+            cellDiv.innerText = cell;
+            cellDiv.addEventListener("click", () => handleCellClick(index));
+            board.appendChild(cellDiv);
+        });
+    }
+
+    function handleCellClick(index) {
+        if (gameState.board[index] !== "" || !gameState.gameActive) {
+            return;
+        }
+
+        gameState.board[index] = gameState.currentPlayer;
+        createBoard();
+        checkWinner();
+    }
+
+    function checkWinner() {
+        let roundWon = false;
+
+        for (let i = 0; i < winningConditions.length; i++) {
+            const [a, b, c] = winningConditions[i];
+
+            if (
+                gameState.board[a] &&
+                gameState.board[a] === gameState.board[b] &&
+                gameState.board[a] === gameState.board[c]
+            ) {
+                roundWon = true;
+                break;
+            }
+        }
+
+        if (roundWon) {
+            statusText.innerText = "Player " + gameState.currentPlayer + " Wins!";
+            gameState.gameActive = false;
+            return;
+        }
+
+        if (!gameState.board.includes("")) {
+            statusText.innerText = "It's a Draw!";
+            gameState.gameActive = false;
+            return;
+        }
+
+        gameState.currentPlayer = gameState.currentPlayer === "X" ? "O" : "X";
+        statusText.innerText = "Player " + gameState.currentPlayer + "'s Turn";
+    }
+
+    function resetGame() {
+        gameState = {
+            board: ["", "", "", "", "", "", "", "", ""],
+            currentPlayer: "X",
+            gameActive: true
+        };
+        statusText.innerText = "Player X's Turn";
+        createBoard();
+    }
+
+    createBoard();
+</script>
+
+</body>
+</html>
